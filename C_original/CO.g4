@@ -31,8 +31,7 @@
 // $antlr-format alignTrailingComments true, columnLimit 150, minEmptyLines 1, maxEmptyLinesToKeep 1, reflowComments false, useTab false
 // $antlr-format allowShortRulesOnASingleLine false, allowShortBlocksOnASingleLine true, alignSemicolons hanging, alignColons hanging
 
-grammar C;
-
+grammar CO;
 
 primaryExpression
     : Identifier
@@ -501,7 +500,7 @@ jumpStatement
     ;
 
 compilationUnit
-    : translationUnit? 
+    : translationUnit? EOF
     ;
 
 translationUnit
@@ -1082,23 +1081,11 @@ fragment SChar
     ;
 
 MultiLineMacro
-    : '#' (~[\n]*? '\\' '\r'? '\n')+ ~ [\n]+ { 
-        console.log(`MultiLineMacro `, this._tokenStartCharIndex, this.spaceDict, this.text)
-        if (this.spaceDict == undefined) {
-            this.spaceDict = {}
-        } 
-        this.spaceDict[this._tokenStartCharIndex] = this.text
-    } -> channel (HIDDEN)
+    : '#' (~[\n]*? '\\' '\r'? '\n')+ ~ [\n]+ -> channel (HIDDEN)
     ;
 
 Directive
-    : '#' ~ [\n]* { 
-        console.log(`Directive `, this._tokenStartCharIndex, this.spaceDict, this.text)
-        if (this.spaceDict == undefined) {
-            this.spaceDict = {}
-        } 
-        this.spaceDict[this._tokenStartCharIndex] = this.text
-    } -> channel (HIDDEN)
+    : '#' ~ [\n]* -> channel (HIDDEN)
     ;
 
 // ignore the following asm blocks:
@@ -1109,53 +1096,21 @@ Directive
     }
  */
 AsmBlock
-    : 'asm' ~'{'* '{' ~'}'* '}' { 
-        console.log(`AsmBlock `, this._tokenStartCharIndex, this.spaceDict, this.text)
-        if (this.spaceDict == undefined) {
-            this.spaceDict = {}
-        } 
-        this.spaceDict[this._tokenStartCharIndex] = this.text
-    } -> channel(HIDDEN)
+    : 'asm' ~'{'* '{' ~'}'* '}' -> channel(HIDDEN)
     ;
 
 Whitespace
-    : [ \t]+ { 
-        console.log(`Whitespace `, this._tokenStartCharIndex, this.spaceDict, this.text)
-        if (this.spaceDict == undefined) {
-            this.spaceDict = {}
-        } 
-        this.spaceDict[this._tokenStartCharIndex] = this.text
-    } -> channel(HIDDEN)
+    : [ \t]+ -> channel(HIDDEN)
     ;
 
 Newline
-    : ('\r' '\n'? | '\n') { 
-        console.log(`Newline `, this._tokenStartCharIndex, this.spaceDict, this.text)
-        if (this.spaceDict == undefined) {
-            this.spaceDict = {}
-        } 
-        this.spaceDict[this._tokenStartCharIndex] = this.text
-    } -> channel(HIDDEN)
+    : ('\r' '\n'? | '\n') -> channel(HIDDEN)
     ;
 
 BlockComment
-    : '/*' .*? '*/' { 
-        console.log(`BlockComment `, this._tokenStartCharIndex, this.spaceDict, this.text)
-        if (this.spaceDict == undefined) {
-            this.spaceDict = {}
-        } 
-        this.spaceDict[this._tokenStartCharIndex] = this.text
-    } -> channel(HIDDEN)
+    : '/*' .*? '*/' -> channel(HIDDEN)
     ;
 
 LineComment
-    : '//' ~[\r\n]* { 
-        console.log(`LineComment `, this._tokenStartCharIndex, this.spaceDict, this.text)
-        if (this.spaceDict == undefined) {
-            this.spaceDict = {}
-        } 
-        this.spaceDict[this._tokenStartCharIndex] = this.text
-    } -> channel(HIDDEN)
+    : '//' ~[\r\n]* -> channel(HIDDEN)
     ;
-
-

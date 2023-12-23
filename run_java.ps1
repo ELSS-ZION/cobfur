@@ -1,3 +1,3 @@
 Remove-Item -Recurse gen/
-antlr4 -Dlanguage=Java .\C.g4 -o gen
-# node main.js
+antlr4 -Dlanguage=Java .\Hello.g4 -o gen
+# node main.jsd
