@@ -37,7 +37,7 @@ grammar C;
 primaryExpression
     : Identifier
     | Constant
-    | StringLiteral+
+    | stringLiteral+
     | '(' expression ')'
     | genericSelection
     | '__extension__'? '(' compoundStatement ')' // Blocks (GCC extension)
@@ -170,10 +170,6 @@ constantExpression
 declaration
     : declarationSpecifiers initDeclaratorList? ';'
     | staticAssertDeclaration
-    {
-        console.log(`Declaration`)
-        /* console.log(`Declaration: ${ctx.getText()} foundStringLiteral: ${ctx.foundStringLiteral}`) */
-    }
     ;
 
 declarationSpecifiers
@@ -334,7 +330,7 @@ vcSpecificModifer
     ;
 
 gccDeclaratorExtension
-    : '__asm' '(' StringLiteral+ ')'
+    : '__asm' '(' stringLiteral+ ')'
     | gccAttributeSpecifier
     ;
 
@@ -430,7 +426,7 @@ designator
     ;
 
 staticAssertDeclaration
-    : '_Static_assert' '(' constantExpression ',' StringLiteral+ ')' ';'
+    : '_Static_assert' '(' constantExpression ',' stringLiteral+ ')' ';'
     ;
 
 statement
@@ -443,9 +439,6 @@ statement
     | ('__asm' | '__asm__') ('volatile' | '__volatile__') '(' (
         logicalOrExpression (',' logicalOrExpression)*
     )? (':' (logicalOrExpression (',' logicalOrExpression)*)?)* ')' ';'
-    {
-        console.log('statement')
-    }
     ;
 
 labeledStatement
@@ -1066,12 +1059,12 @@ fragment HexadecimalEscapeSequence
     : '\\x' HexadecimalDigit+
     ;
 
-StringLiteral
+stringLiteral
     : EncodingPrefix? '"' SCharSequence? '"' {
         /*
-        console.log(`StringLiteral ${this.text} `, this.parentCtx)
+        console.log(`stringLiteral ${this.text} `, this.parentCtx)
         this.isStringLiteral = true;
-        console.log(`StringLiteral this.isStringLiteral ${this.isStringLiteral} `)
+        console.log(`stringLiteral this.isStringLiteral ${this.isStringLiteral} `)
         */
         this.isStringLiteral = true;
     }
