@@ -1,1 +1,0 @@
-intmain(){inti,sum=0;for(i=1;i<=9;i++){sum+=i;}printf("sum = %d\n",sum);return0;}<EOF>
