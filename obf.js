@@ -225,7 +225,7 @@ ZCrypt.generate_c = function(ops, cs, varName, indent)
 
     code += `\n${indent}};\n\n`;
 
-    code += `${indent}for (unsigned int m = 0; m < sizeof(s); ++m)\n${indent}{\n`
+    code += `${indent}for (unsigned int m = 0; m < sizeof(${varName}); ++m)\n${indent}{\n`
     code += `${indent}    unsigned char c = ${varName}[m];\n`;
 
     ops = ops.reverse();
