@@ -15,79 +15,74 @@ class MyListener extends CListener {
         this.rewriter = new antlr4.TokenStreamRewriter(tokenStream)
     }
 
-    enterDeclaration(ctx) {
-        let result = this.findStringLiteral(ctx)
-        if (result == undefined) {
+    handle(ctx) {
+        if (ctx.foundStringLiteral != undefined) {
+            return
+        }
+        
+        ctx.foundStringLiteral = this.findStringLiteral(ctx)
+        if (ctx.foundStringLiteral == undefined) {
             return
         }
 
-        let originalStatement = originalText.substring(ctx.start.start, ctx.stop.stop)
-
-        console.log(`foundStringLiteral: ${result} in declaration: ${originalStatement}`)
-        ctx.foundStringLiteral = result
-
-        let i = ctx.start.start - 1
-        let indent = ''
-
-        while(true) {
-            if (originalText[i].match(/[^\S\n]/) == undefined) {
-                break
-            }
-            indent += originalText[i]
-            i--
-        }
-
-        console.log(`~${indent}~`)
-
-        var crypted = ZCrypt.cryptstr(result.replace('"', ''), `__s${count}__`, indent);
-        console.log(crypted);
-
-        this.rewriter.replace(ctx.start, ctx.stop, `${crypted}${indent}${originalStatement.replace(result, `__s${count}__`)};`)
-        count++
-	}
-
-    enterStatement(ctx) {
-        let result = this.findStringLiteral(ctx)
-        if (result == undefined) {
-            return
-        }
+        let indent = this.getIndent(ctx)
 
         let originalStatement = originalText.substring(ctx.start.start, ctx.stop.stop)
 
-        console.log(`foundStringLiteral: ${result} in declaration: ${originalStatement}`)
-        ctx.foundStringLiteral = result
+        console.log(`foundStringLiteral: ${ctx.foundStringLiteral} in declaration: ${originalStatement}`)
 
-        let i = ctx.start.start - 1
-        let indent = ''
+        let addon = ''
+        let replacer = originalStatement
 
-        while(true) {
-            if (originalText[i].match(/[^\S\n]/) == undefined) {
-                break
+        for (const strLiteral of ctx.foundStringLiteral) {
+            let varName = `__s${count}__`
+            var crypted = ZCrypt.cryptstr(JSON.parse(strLiteral), varName, indent);
+            console.log(crypted);
+            if (strLiteral != ctx.foundStringLiteral[0]) {
+                addon += indent
             }
-            indent += originalText[i]
-            i--
+            
+            addon += crypted
+            replacer = replacer.replace(strLiteral, varName)
+            count++
         }
-
-        console.log(`~${indent}~`)
-
-        var crypted = ZCrypt.cryptstr(result.replace('"', ''), `__s${count}__`, indent);
-        console.log(crypted);
-
-        this.rewriter.replace(ctx.start, ctx.stop, `${crypted}${indent}${originalStatement.replace(result, `__s${count}__`)};`)
-        count++
+        this.rewriter.replace(ctx.start, ctx.stop, `${addon}${indent}${replacer};`)
     }
 
+    enterExpressionStatement(ctx) {
+        this.handle(ctx)
+    }
+
+    enterDeclaration(ctx) {
+        this.handle(ctx)
+    }
+
+    getIndent(ctx) {
+        let i = ctx.start.start - 1
+        let indent = ''
+
+        while(true) {
+            if (originalText[i].match(/[^\S\n]/) == undefined) {
+                break
+            }
+            indent += originalText[i]
+            i--
+        }
+
+        console.log(`~${indent}~`)
+        return indent
+    }
     findStringLiteral(ctx) {
         if (ctx == null) {
             return
         }
 
         if (ctx.start?.type == CLexer.StringLiteral) {
-            let result = ''
+            let result = []
             for (const i in ctx.children) {
                 const e = ctx.children[i]
                 if (e.start?.type  == CLexer.StringLiteral) {
-                    result += e.getText()
+                    result.push(e.getText())
                 }
             }
             return result
@@ -140,4 +135,6 @@ fs.readFile('main.c', { encoding: 'utf8' }, (err, data) => {
 });
 
 
-
+// let s = "\"AlbumSDK_getOwnerList resp->buf: %s\\n\""
+// let result = JSON.parse(s)
+// console.log(`~${result}~`)
