@@ -36,7 +36,10 @@ class MyListener extends CListener {
 
         for (const strLiteral of ctx.foundStringLiteral) {
             let varName = `__s${count}__`
-            var crypted = ZCrypt.cryptstr(JSON.parse(strLiteral), varName, indent);
+            let s = strLiteral.replace(/"\s*"/, "")
+            console.log(strLiteral);
+
+            var crypted = ZCrypt.cryptstr(JSON.parse(s), varName, indent);
             console.log(crypted);
             if (strLiteral != ctx.foundStringLiteral[0]) {
                 addon += indent
@@ -82,7 +85,9 @@ class MyListener extends CListener {
             for (const i in ctx.children) {
                 const e = ctx.children[i]
                 if (e.start?.type  == CLexer.StringLiteral) {
-                    result.push(e.getText())
+                    const ctxOrgText = originalText.substring(e.start.start, e.stop.stop + 1)
+                    result.push(ctxOrgText)
+                    console.log(`ctxOrgText: ${ctxOrgText}`)
                 }
             }
             return result
