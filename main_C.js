@@ -3,6 +3,7 @@ import CLexer from './gen/CLexer.js';
 import CParser from './gen/CParser.js';
 import CListener from './gen/CListener.js';
 import fs from 'fs';
+import path from 'path';
 import { ZCrypt } from './obf.js'
 
 let lexer
@@ -104,42 +105,61 @@ class MyListener extends CListener {
     }
 }
 
-const insertAt = (str, sub, pos) => `${str.slice(0, pos)}${sub}${str.slice(pos)}`;
-
-fs.readFile('main.c', { encoding: 'utf8' }, (err, data) => {
-    if (err) {
-        console.error(err);
-        return;
+function getFiles(dir, files = []) {
+    const fileList = fs.readdirSync(dir);
+    for (const file of fileList) {
+        const filePath = path.join(dir, file);
+        const stat = fs.statSync(filePath);
+        if (stat.isDirectory()) {
+            getFiles(filePath, files);
+        } else {
+            files.push(filePath);
+        }
     }
-    originalText = data
-    const input = data
-    const chars = new antlr4.InputStream(input);
-    lexer = new CLexer(chars);
-    lexer.strictMode = false;
-    const tokens = new antlr4.CommonTokenStream(lexer);
-    const parser = new CParser(tokens);
-    const tree = parser.compilationUnit()
-    const lsnr = new MyListener(tokens);
-    antlr4.tree.ParseTreeWalker.DEFAULT.walk(lsnr, tree);
+    return files;
+}
 
-    // let result = tree.getText()
+const fileList = getFiles("input")
+const insertAt = (str, sub, pos) => `${str.slice(0, pos)}${sub}${str.slice(pos)}`
 
-    // for (const key in lexer.spaceDict) {
-    //     result = insertAt(result, lexer.spaceDict[key], key)
-    // }
+for (let file of fileList) {
+    file = file.split(path.sep).slice(1).join(path.sep)
+    console.log(`file: ${file}`)
+    let inputFile = `input/${file}`
+    let outputFile = `output/${file}`
 
-    // fs.writeFile('output.c', result, (err) => {
-    //     if (err) throw err;
-    // });
-
-    let result = lsnr.rewriter.getText()
-    fs.writeFile('output.c', result, (err) => {
-        if (err) throw err;
+    fs.readFile(inputFile, { encoding: 'utf8' }, (err, data) => {
+        if (err) {
+            console.error(err);
+            return;
+        }
+        originalText = data
+        const input = data
+        const chars = new antlr4.InputStream(input);
+        lexer = new CLexer(chars);
+        lexer.strictMode = false;
+        const tokens = new antlr4.CommonTokenStream(lexer);
+        const parser = new CParser(tokens);
+        const tree = parser.compilationUnit()
+        const lsnr = new MyListener(tokens);
+        antlr4.tree.ParseTreeWalker.DEFAULT.walk(lsnr, tree);
+    
+        // let result = tree.getText()
+    
+        // for (const key in lexer.spaceDict) {
+        //     result = insertAt(result, lexer.spaceDict[key], key)
+        // }
+    
+        // fs.writeFile('output.c', result, (err) => {
+        //     if (err) throw err;
+        // });
+        fs.mkdirSync(path.dirname(outputFile), { recursive: true })
+        let result = lsnr.rewriter.getText()
+        fs.writeFile(outputFile, result, (err) => {
+            if (err) throw err;
+        });
     });
+}
 
-});
 
 
-// let s = "\"AlbumSDK_getOwnerList resp->buf: %s\\n\""
-// let result = JSON.parse(s)
-// console.log(`~${result}~`)
